@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app">
+      {{str}}
+      <p v-bind:id="uuid" v-bind:class="name">{{num}}</p>
+      <!-- 실제 화면에서 아래와 같이 보일 것
+          <p id="abc1234">{{num}}</p> -->
+      <p>{{doubleNum}}</p>
+      <div v-if="loading">Loading..</div>
+      <div v-else>test user has been logged in</div>
+      <!-- 위의 v-if와 v-show는 둘 다 화면에 보이지 않으나
+        차이점은 if는 조건 안 맞을 때 아예 태그를 없애지만
+    show는 태그는 존재하나 style="display:none"이 된다. -->
+      <div v-show="loading">Loading...</div>
+      <input v-model="message" placeholder="edit me" />
+      <p>{{message}}</p>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+      new Vue({
+        el: "#app",
+        data: {
+          str: "hi",
+          num: 10,
+          uuid: "abc1234", // 위의 p tag의 id를 인스턴스에서 관리할 수 있다
+          name: "text-blue", // 클래스도 연결 가능
+          loading: true,
+          message: "",
+        },
+        computed: {
+          doubleNum: function () {
+            return this.num * 2;
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
