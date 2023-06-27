@@ -1,0 +1,117 @@
+<section data-component="new-collection-nav" data-component-type="section" {% if tag != blank %}data-component-tag="{{ tag }}" {% endif %} class="collection-nav">
+  <section-wrapper>
+    <section-content>
+      {% if section.settings.show_nav %}
+
+        {% assign no_gnb_flag_fixed = true %}
+        {% assign no_gnb_flag = true %}
+        {% assign c_title = collection.title %}
+          
+        <div class="collection-nav-grid">
+          <div class="blnkbx"></div>
+          <div class="collection-nav__wrapper"> 
+            {% comment %}현재 콜렉션 핸들 : {{ collection.handle }} {% endcomment %}
+            <ul class="subnav-sg">
+              <li><a href="{{ routes.root_url }}">HOME</a></li>
+              {% for menu in linklists.main-menu.links %}
+                <ul class="Breadcrm">
+                  <li class="brd" data-url="{{ menu.title | handle | downcase }}">
+                    <span>{{ menu.title }}</span>
+                    
+                      {% if menu.links %}
+                        <ul>
+                          {% for submenu in menu.links %}
+                            <li class="brd" data-url="{{ submenu.title | handle | downcase }}">
+                              <span>{{ submenu.title }}</span>
+                              {% if submenu.links %}
+                                <ul>
+                                  {% for subsubmenu in submenu.links %}
+                                    <li class="brd" data-url="{{ subsubmenu.title | handle | downcase }}">{{ subsubmenu.title }}</li>
+                                  {% endfor %}
+                                </ul>
+                              {% endif %}
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      {% endif %}
+                    </li>
+                  </ul>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {% endif %}
+        
+    </section-content>
+  </section-wrapper>
+</section>
+
+<style>
+
+  
+  .brd {
+    color: #000;
+    display: none;
+  }
+
+  .brd.active {
+    display: block;
+    color: red;
+  }
+
+  .Breadcrm {
+    margin: 0;
+    padding: 0;
+  }
+</style>
+
+<script>
+  // 현재 접속한 콜렉션의 핸들러명을 가져오는 코드 (테마에 따라 방식이 다를 수 있음)
+  var currentURLHandler = '{{ collection.handle }}';
+
+  // 네비게이션 메뉴 항목 탐색 및 비교
+  var menuItems = document.querySelectorAll('.brd[data-url]');
+  for (var i = 0; i < menuItems.length; i++) {
+    var menuItem = menuItems[i];
+    var menuItemURLHandler = menuItem.getAttribute('data-url');
+
+    // 현재 URL 핸들러와 메뉴 항목의 URL 핸들러 비교
+    if (currentURLHandler === menuItemURLHandler) {
+      // 현재 항목에 active 클래스 추가
+      menuItem.classList.add('active');
+
+      // 부모 항목에 active 클래스 추가
+      var parentItem = menuItem.parentNode.parentNode;
+      if (parentItem && parentItem.tagName === 'LI') {
+        parentItem.classList.add('active');
+      }
+
+      // 할아버지 항목에 active 클래스 추가
+      var grandparentItem = parentItem.parentNode.parentNode;
+      if (grandparentItem && grandparentItem.tagName === 'LI') {
+        grandparentItem.classList.add('active');
+      }
+
+      // 필요에 따라 더 상위 계층의 항목에도 active 클래스를 추가할 수 있습니다.
+    }
+  }
+</script>
+
+{% schema %}
+{
+  "name": "New Collection nav",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_nav",
+      "label": "Show collection navigation",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "New Collection Navigator"
+    }
+  ]
+}
+{% endschema %}
