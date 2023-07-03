@@ -1,0 +1,262 @@
+{% liquid
+  assign flag = false
+  assign collection_handles = ''
+
+  for link in linklists[section.settings.menu].links
+    assign link_title = link.title | handle | downcase
+    if collection.handle == link_title
+      for tier_2_link in link.links
+        if tier_2_link.type == 'collection_link' or tier_2_link.type == 'catalog_link'
+          assign tier_2_link_handle = tier_2_link.url | replace: '/collections/', '' | split: '/'
+          assign collection_handles = collection_handles | append: tier_2_link_handle[0] | append: '|'
+        endif
+      endfor
+      break
+
+    elsif link.links.size > 0
+      for tier_2_link in link.links
+        assign sublink_title = tier_2_link.title | handle | downcase
+        if collection.handle == sublink_title
+          for tier_3_link in tier_2_link.links
+            if tier_3_link.type == 'collection_link' or tier_3_link.type == 'catalog_link'
+              assign tier_3_link_handle = tier_3_link.url | replace: '/collections/', '' | split: '/'
+              assign collection_handles = collection_handles | append: tier_3_link_handle[0] | append: '|'
+            endif
+          endfor
+          break
+
+        elsif tier_2_link.links.size > 0
+          for tier_3_link in tier_2_link.links
+            assign subsublink_title = tier_3_link.title | handle | downcase
+            if collection.handle == subsublink_title
+              assign flag = true
+              assign parent = tier_2_link
+            endif
+          endfor
+
+        endif
+      endfor
+    endif
+  endfor
+
+
+  if flag == true
+    for child_3_link in parent.links
+      if child_3_link.type == 'collection_link' or child_3_link.type == 'catalog_link'
+        assign child_3_link_handle = child_3_link.url | replace: '/collections/', '' | split: '/'
+        assign collection_handles = collection_handles | append: child_3_link_handle[0] | append: '|'
+      endif
+    endfor
+  endif
+  
+  assign collection_handles = collection_handles | split: '|'
+%}
+
+{% if collection_handles.size > 0 or section.blocks.size > 0 %}
+  <section class="collection-subcollections sg-colsection no-scrollbar common">
+    {% if section.settings.heading != blank or section.settings.subheading != blank %}
+    <section-wrapper>
+      <section-header class="collection-sub-grid">
+        <div class="blnkbx"></div>
+        <div class="collection-subcollections__header">
+          {% if section.settings.heading != blank %}
+            <h2 class="collection-subcollections__heading">
+              {{ section.settings.heading | escape }}
+            </h2>
+          {% endif %}
+          {% if section.settings.subheading != blank %}
+            <p class="collection-subcollections__subheading">
+              {{ section.settings.subheading | escape }}
+            </p>
+          {% endif %}
+        </div>
+      </section-header>
+    </section-wrapper>
+    {% endif %}
+    <section-wrapper>
+      <section-content class="collection-sub-grid">
+        <div class="blnkbx"></div>
+        <div
+          class="sub-collections__container sg-subcollection"
+          style="--collections-per-row: {{ section.settings.collections_per_row }};"
+        >
+          {% if section.blocks.size > 0 %}
+            {% for block in section.blocks %}
+              {% comment %}Component block-collection-card:default:1.0.0-pre.10 begin{% endcomment %}
+              {% liquid
+                assign aspect_ratio_2b4a88b8 = aspect_ratio
+                assign aspect_ratio = 'portrait'
+              %}
+              {%- comment -%}
+                @param aspect_ratio [Optional]
+                  The aspect ratio for the image. Defaults to: `natural`
+              {%- endcomment -%}
+              
+              <div data-component="block-collection-card" data-component-type="block" {% if tag != blank %}data-component-tag="{{ tag }}" {% endif %}class="block-collection-card" {{ block.shopify_attributes }}>
+                {% comment %}Component collection-card:default:1.0.0-pre.10 begin{% endcomment %}
+                {% render 'collection-card', collection: block.settings.collection, use_custom_image: block.settings.use_custom_image, custom_image: block.settings.custom_image %}
+                {% comment %}Component collection-card:default:1.0.0-pre.10 end{% endcomment %}
+              </div>
+              
+              {% liquid
+                assign aspect_ratio = aspect_ratio_2b4a88b8
+                assign aspect_ratio_2b4a88b8 = nil
+              %}
+              {% comment %}Component block-collection-card:default:1.0.0-pre.10 end{% endcomment %}
+            {% endfor %}
+          {% elsif collection_handles.size > 0 %}
+            {% for handle in collection_handles %}
+              {% comment %}Component collection-card:default:1.0.0-pre.10 begin{% endcomment %}
+              {% render 'collection-card', collection: collections[handle] %}
+              {% comment %}Component collection-card:default:1.0.0-pre.10 end{% endcomment %}
+            {% endfor %}
+          {% endif %}
+        </div>
+      </section-content>
+    </section-wrapper>
+
+    
+  </section>
+{% endif %}
+
+<script>
+let fxmfilter = localStorage.getItem("fxmfilter");
+  
+if (fxmfilter) {
+  $('.sg-colsection.fixed').css({"display" : "block"});
+  $('.sg-colsection.common').css({"display" : "none"});
+} else {
+  $('.sg-colsection.fixed').css({"display" : "none"});
+  $('.sg-colsection.common').css({"display" : "block"});
+}
+</script>
+
+{% schema %}
+{
+  "name": "Subcollections",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Subcollections"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Help guide customers to the products they’re looking for by featuring subcollections on your collection page."
+    },
+    {
+      "type": "range",
+      "id": "collections_per_row",
+      "label": "Collections per row",
+      "step": 1,
+      "min": 2,
+      "max": 10,
+      "default": 6
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menu",
+      "info": "Assign the menu to use as a reference for your subcollection. [Learn more about subcollections](https://support.pixelunion.net/hc/en-us/articles/4461865367571).",
+      "default": "main-menu"
+    },
+    {
+      "type": "header",
+      "content": "Collection card"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_title",
+      "label": "Show title",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "Show description",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product_count",
+      "label": "Show product count",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "collection_card_media_ratio",
+      "label": "Media aspect ratio",
+      "options": [
+        {
+          "value": "natural",
+          "label": "Natural"
+        },
+        {
+          "value": "square",
+          "label": "Square (1:1)"
+        },
+        {
+          "value": "landscape",
+          "label": "Landscape (3:2)"
+        },
+        {
+          "value": "portrait",
+          "label": "Portrait (2:3)"
+        }
+      ],
+      "default": "natural"
+    },
+    {
+      "type": "select",
+      "id": "collection_card_crop_mode",
+      "label": "Image crop mode",
+      "info": "This will have no effect when media aspect ratio is set to \"Natural\".",
+      "options": [
+        {
+          "value": "fill",
+          "label": "Fill"
+        },
+        {
+          "value": "fit",
+          "label": "Fit"
+        }
+      ],
+      "default": "fill"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Subcollections"
+    }
+  ],
+  "templates": [
+    "collection"
+  ],
+  "blocks": [
+    {
+      "type": "collection",
+      "name": "Collection",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        },
+        {
+          "type": "checkbox",
+          "id": "use_custom_image",
+          "label": "Use custom image"
+        },
+        {
+          "type": "image_picker",
+          "id": "custom_image",
+          "label": "Custom image"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
